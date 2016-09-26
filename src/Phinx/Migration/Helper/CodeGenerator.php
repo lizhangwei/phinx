@@ -81,7 +81,7 @@ class CodeGenerator
      */
     public static function buildColumnOptionsString(Column $column)
     {
-        $options = array('length', 'default', 'null', 'precision', 'scale', 'after', 'update', 'comment', 'values');
+        $options = array('length', 'default', 'null', 'precision', 'scale', 'after', 'update', 'comment', 'values', 'collation');
         $stringParts = array();
         foreach ($options as $option) {
             if ($option === 'length') {

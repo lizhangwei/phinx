@@ -369,7 +369,7 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
     public function getColumns($tableName)
     {
         $columns = array();
-        $rows = $this->fetchAll(sprintf('SHOW COLUMNS FROM %s', $this->quoteTableName($tableName)));
+        $rows = $this->fetchAll(sprintf('SHOW FULL COLUMNS FROM %s', $this->quoteTableName($tableName)));
         foreach ($rows as $columnInfo) {
 
             $phinxType = $this->getPhinxType($columnInfo['Type']);
@@ -387,6 +387,12 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
 
             if ($columnInfo['Extra'] === 'auto_increment') {
                 $column->setIdentity(true);
+            }
+
+            if (in_array($phinxType['name'], ['char', 'string', 'text'])) {
+                if ($columnInfo['Collation']) {
+                    $column->setCollation($columnInfo['Collation']);
+                }
             }
 
             $columns[] = $column;
