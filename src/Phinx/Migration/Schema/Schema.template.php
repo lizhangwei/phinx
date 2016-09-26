@@ -20,7 +20,6 @@ class Schema extends AbstractMigration
     <?php endforeach; ?>
     <?php foreach ($tables as $table) : ?>
         <?php
-    //    $foreignKeys = $table->getAdapter()->getForeignKeys($table->getName());
         $foreignKeys = $table->getForeignKeys();
         if (count($foreignKeys) > 0) : ?>
             $this->table('<?php echo $table->getName();?>', <?php echo CodeGenerator::buildTableOptionsString($table); ?>)

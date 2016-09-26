@@ -187,9 +187,27 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
 
         $tables = array();
         $rows = $this->fetchAll(sprintf('SHOW TABLES IN `%s`', $options['name']));
+
         foreach ($rows as $row) {
             $tableOptions = $this->getTableOptions($row[0]);
-            $tables[] = new Table($row[0], $tableOptions, $this);
+            $table = new Table($row[0], $tableOptions, $this);
+            $tables[$row[0]] = $table;
+        }
+
+        foreach ($tables as $table) {
+            $foreignKeys = [];
+
+            foreach ($this->getForeignKeys($table->getName()) as $foreignKey) {
+                $fk = new ForeignKey();
+
+                $fk->setColumns($foreignKey["columns"]);
+                $fk->setReferencedTable($tables[$foreignKey["referenced_table"]]);
+                $fk->setReferencedColumns($foreignKey["referenced_columns"]);
+
+                $foreignKeys[] = $fk;
+            }
+
+            $table->setForeignKeys($foreignKeys);
         }
 
         return $tables;
