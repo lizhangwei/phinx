@@ -192,7 +192,8 @@ To create a schema dump, use as follows.
 
         $ phinx schema:dump -e development
 
-By default, the schema will be dumped to your migrations folder.
+By default, the schema will be dumped to your migrations folder. If you have
+multiple migration paths configured, you will have to pick one.
 
 The Schema Load Command
 -----------------------
@@ -203,13 +204,16 @@ If a schema was dumped before, use this command to load it into the database.
 
         $ phinx schema:load -e development
 
-This will remove all existing database tables. You will be asked to confirm
-this operation. If you want to skip the confirmation, add the ``--destroy``
-parameter
+This command will remove all existing database tables. You will be asked to
+confirm this operation. If you want to skip the confirmation, add the
+``--destroy`` parameter.
 
 .. code-block:: bash
 
         $ phinx schema:load -e development --destroy
+
+If you have configured multiple migration paths, you will have to pick one. It
+makes no sense to have multiple initial schemas.
 
 Configuration File Parameter
 ----------------------------
