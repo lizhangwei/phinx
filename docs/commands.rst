@@ -184,7 +184,8 @@ The Schema Dump Command
 -----------------------
 
 The Schema Dump command allows you to create an intial database schema dump,
-which can be used as a starting point for future migrations.
+which can be used as a starting point for future migrations. It will dump the
+table structure, foreign keys and indexes.
 
 To create a schema dump, use as follows.
 
