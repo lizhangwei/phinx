@@ -9,7 +9,7 @@ use Phinx\Db\Table\Column,
 class CodeGenerator
 {
     /**
-     * Checks is column equals 'id' in table options
+     * Checks if column equals 'id' in table options
      *
      * @param Table $table
      * @param Column $column
@@ -19,19 +19,16 @@ class CodeGenerator
     public static function isColumnSinglePrimaryKey(Table $table, Column $column)
     {
         $options = $table->getOptions();
-        if (isset($options['primary_key']) && in_array('id', $options['primary_key'])) {
-            // $this->table('table', array('id'=>false, 'primary_key'=>array('id', 'value'))) case
 
+        if (isset($options['primary_key']) && in_array('id', $options['primary_key'])) {
             return false;
         }
 
         if ($column->getName() == 'id' && !isset($options['id'])) {
-
             return true;
         }
 
         if (isset($options['id']) && $options['id'] == $column->getName()) {
-
             return true;
         }
 
@@ -45,9 +42,8 @@ class CodeGenerator
      */
     public static function buildTableOptionsString(Table $table)
     {
-
         if (is_array($table->getIndexes()) && !array_key_exists('PRIMARY', $table->getIndexes())) {
-            //account for tables that do not have a primary key
+            // Account for tables that do not have a primary key
             return "array('id' => false)";
         } else {
             $stringParts = array();
@@ -165,7 +161,6 @@ class CodeGenerator
     public static function buildIndexString($index, $name)
     {
         $command =  "array('" . implode("', '", $index['columns']) . "')";
-
         $command .= ", array('name' => '{$name}'";
 
         if (isset($index['fulltext']) && $index['fulltext']) {

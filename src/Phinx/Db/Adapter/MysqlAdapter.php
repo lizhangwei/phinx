@@ -558,9 +558,10 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
             $indexes[$row['Key_name']]['columns'][] = strtolower($row['Column_name']);
         }
 
-        //if index has a limit we need to push the limit column to the end of the array so it matches the create stmt
+        // If index has a limit we need to push the limit column to the end of
+        // the array so it matches the create statement.
         foreach ($indexes as $key_name => $index) {
-            if ($index['limit']) {
+            if (isset($index['limit'])) {
                 foreach ($index['columns'] as $key => $column) {
                     if ($column == $index['limit_col']) {
                         unset($indexes[$key_name]['columns'][$key]);
