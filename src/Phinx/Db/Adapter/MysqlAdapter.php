@@ -191,6 +191,7 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
         foreach ($rows as $row) {
             $tableOptions = $this->getTableOptions($row[0]);
             $table = new Table($row[0], $tableOptions, $this);
+            $table->setIndexes($this->getIndexes($row[0], false));
             $tables[$row[0]] = $table;
         }
 
@@ -533,18 +534,42 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
      * Get an array of indexes from a particular table.
      *
      * @param string $tableName Table Name
+     * @param boolean $lowercase
      * @return array
      */
-    protected function getIndexes($tableName)
+    public function getIndexes($tableName)
     {
         $indexes = array();
         $rows = $this->fetchAll(sprintf('SHOW INDEXES FROM %s', $this->quoteTableName($tableName)));
         foreach ($rows as $row) {
             if (!isset($indexes[$row['Key_name']])) {
-                $indexes[$row['Key_name']] = array('columns' => array());
+                $indexes[$row['Key_name']] = array(
+                    'columns' => array(),
+                    'unique' => $row['Non_unique'] == 0 ?  1 : 0,
+                    'fulltext' => strtolower($row['Index_type']) == 'fulltext' ? 1 : 0
+                );
             }
+
+            if ($row['Sub_part'] !== null) {
+                $indexes[$row['Key_name']]['limit'] = $row['Sub_part'];
+                $indexes[$row['Key_name']]['limit_col'] = strtolower($row['Column_name']);
+            }
+
             $indexes[$row['Key_name']]['columns'][] = strtolower($row['Column_name']);
         }
+
+        //if index has a limit we need to push the limit column to the end of the array so it matches the create stmt
+        foreach ($indexes as $key_name => $index) {
+            if ($index['limit']) {
+                foreach ($index['columns'] as $key => $column) {
+                    if ($column == $index['limit_col']) {
+                        unset($indexes[$key_name]['columns'][$key]);
+                    }
+                }
+                $indexes[$key_name]['columns'][] = $index['limit_col'];
+            }
+        }
+
         return $indexes;
     }
 
@@ -804,7 +829,8 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
                 return array('name' => 'text');
                 break;
             case static::PHINX_TYPE_BINARY:
-                return array('name' => 'binary', 'limit' => $limit ? $limit : 255);
+            case static::PHINX_TYPE_VARBINARY:
+                return array('name' => $type, 'limit' => $limit ? $limit : 255);
                 break;
             case static::PHINX_TYPE_BLOB:
                 if ($limit) {
@@ -1174,13 +1200,20 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
         $rows = $this->fetchAll(sprintf('SHOW COLUMNS IN `%s`', $tableName));
         $pkFieldNames = array();
         $isPkAutoIncrement = false;
+        $hasIdField = false;
         foreach ($rows as $row) {
             if ($row['Key'] == 'PRI') {
                 $pkFieldNames[] = $row['Field'];
                 if ($row['Extra'] == 'auto_increment') {
                     $isPkAutoIncrement = true;
                 }
+            } else if (strtolower($row['Field']) == 'id') {
+                $hasIdField = true;
             }
+        }
+
+        if (!count($pkFieldNames) && $hasIdField) {
+            return array('id' => false);
         }
 
         // new Table('user');

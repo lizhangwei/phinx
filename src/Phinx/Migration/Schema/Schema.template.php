@@ -15,6 +15,12 @@ class Schema extends AbstractMigration
                 ->addColumn(<?php echo CodeGenerator::buildAddColumnArgumentsString($column);?>)
             <?php endif; ?>
         <?php endforeach; ?>
+
+        <?php foreach($table->getIndexes() as $name => $index): ?>
+            <? if ($name !== 'PRIMARY'): ?>
+                ->addIndex(<?php echo CodeGenerator::buildIndexString($index, $name) ;?>)
+            <? endif; ?>
+        <?php endforeach; ?>
         ->create();
 
     <?php endforeach; ?>

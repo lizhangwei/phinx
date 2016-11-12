@@ -25,7 +25,7 @@ class CodeGenerator
             return false;
         }
 
-        if ($column->getName() == 'id') {
+        if ($column->getName() == 'id' && !isset($options['id'])) {
 
             return true;
         }
@@ -45,31 +45,37 @@ class CodeGenerator
      */
     public static function buildTableOptionsString(Table $table)
     {
-        $stringParts = array();
-        $options = $table->getOptions();
 
-        foreach ($options as $option => $value) {
-            // TODO: move common code or probably replace with something cooler
-            // like var_export() but with friendly output
+        if (is_array($table->getIndexes()) && !array_key_exists('PRIMARY', $table->getIndexes())) {
+            //account for tables that do not have a primary key
+            return "array('id' => false)";
+        } else {
+            $stringParts = array();
+            $options = $table->getOptions();
 
-            if (is_numeric($value)) {
-                $string = "'{$option}'=>$value";
-            } elseif (is_bool($value)) {
-                $string = $value ? "'{$option}'=>true" : "'{$option}'=>false";
-            } elseif (is_array($value)) {
-                $array = array();
-                foreach ($value as $element) {
-                    $array[] = "'{$element}'";
+            foreach ($options as $option => $value) {
+                // TODO: move common code or probably replace with something cooler
+                // like var_export() but with friendly output
+
+                if (is_numeric($value)) {
+                    $string = "'{$option}'=>$value";
+                } elseif (is_bool($value)) {
+                    $string = $value ? "'{$option}'=>true" : "'{$option}'=>false";
+                } elseif (is_array($value)) {
+                    $array = [ ];
+                    foreach ($value as $element) {
+                        $array[] = "'{$element}'";
+                    }
+                    $string = "'{$option}'=>array(" . implode(", ", $array) . ")";
+                } else {
+                    $string = "'{$option}'=>'$value'";
                 }
-                $string = "'{$option}'=>array(".implode(", ", $array).")";
-            } else {
-                $string = "'{$option}'=>'$value'";
+
+                $stringParts[] = $string;
             }
 
-            $stringParts[] = $string;
+            return "array(" . implode(", ", $stringParts) . ")";
         }
-
-        return "array(".implode(", ", $stringParts).")";
     }
 
     /**
@@ -154,5 +160,26 @@ class CodeGenerator
         }
 
         return "->addForeignKey({$columnsDef}, '{$fk->getReferencedTable()->getName()}', {$refColumnsDef})";
+    }
+
+    public static function buildIndexString($index, $name)
+    {
+        $command =  "array('" . implode("', '", $index['columns']) . "')";
+
+        $command .= ", array('name' => '{$name}'";
+
+        if (isset($index['fulltext']) && $index['fulltext']) {
+            $command .= ", 'type' => 'fulltext'";
+        }
+
+        if (isset($index['unique']) && $index['unique']) {
+            $command .= ", 'unique' => true";
+        }
+
+        if (isset($index['limit']) && $index['limit']) {
+            $command .= ", 'limit' => {$index['limit']}";
+        }
+
+        return $command . ')';
     }
 }
