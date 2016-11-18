@@ -15,10 +15,10 @@ class Schema extends AbstractMigration
                 ->addColumn(<?php echo CodeGenerator::buildAddColumnArgumentsString($column);?>)
             <?php endif; ?>
         <?php endforeach; ?>
-        <?php foreach($table->getIndexes() as $name => $index): ?>
-            <? if ($name !== 'PRIMARY'): ?>
-                ->addIndex(<?php echo CodeGenerator::buildIndexString($index, $name) ;?>)
-            <? endif; ?>
+        <?php foreach ($table->getIndexes() as $name => $index): ?>
+            <?php if ($name !== 'PRIMARY'): ?>
+                ->addIndex(<?php echo CodeGenerator::buildIndexString($index) ;?>)
+            <?php endif; ?>
         <?php endforeach; ?>
         ->create();
     <?php endforeach; ?>
@@ -27,7 +27,7 @@ class Schema extends AbstractMigration
         <?php if (count($foreignKeys) > 0) : ?>
             $this->table('<?php echo $table->getName();?>', <?php echo CodeGenerator::buildTableOptionsString($table); ?>)
             <?php foreach ($foreignKeys as $foreignKey) : ?>
-                <?php echo CodeGenerator::buildFkString($foreignKey); ?>
+                ->addForeignKey(<?php echo CodeGenerator::buildFkString($foreignKey); ?>)
             <?php endforeach; ?>
             ->update();
         <?php endif; ?>

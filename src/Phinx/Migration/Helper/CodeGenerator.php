@@ -142,39 +142,53 @@ class CodeGenerator
 
     public static function buildFkString(Table\ForeignKey $fk)
     {
+        $args = array();
+
         $columns = $fk->getColumns();
         if (count($columns) > 1) {
-            $columnsDef = 'array('.implode(',', $columns).')';
+            $args[] = 'array('.implode(',', $columns).')';
         } else {
-            $columnsDef = "'{$columns[0]}'";
+            $args[] = "'{$columns[0]}'";
         }
+
+        $args[] = "'{$fk->getReferencedTable()->getName()}'";
+
         $refColumns = $fk->getReferencedColumns();
         if (count($refColumns) > 1) {
-            $refColumnsDef = 'array('.implode(',', $refColumns).')';
+            $args[] = 'array('.implode(',', $refColumns).')';
         } else {
-            $refColumnsDef = "'{$refColumns[0]}'";
+            $args[] = "'{$refColumns[0]}'";
         }
 
-        return "->addForeignKey({$columnsDef}, '{$fk->getReferencedTable()->getName()}', {$refColumnsDef})";
+        return implode(', ', $args);
     }
 
-    public static function buildIndexString($index, $name)
+    public static function buildIndexString($index)
     {
-        $command =  "array('" . implode("', '", $index['columns']) . "')";
-        $command .= ", array('name' => '{$name}'";
+        $args = [];
+
+        $columns =  "array('" . implode("', '", $index['columns']) . "')";
+
+        if (isset($index['name']) && $index['name']) {
+            $args[] = "'name' => '{$index['name']}'";
+        }
 
         if (isset($index['fulltext']) && $index['fulltext']) {
-            $command .= ", 'type' => 'fulltext'";
+            $args[] = "'type' => 'fulltext'";
         }
 
         if (isset($index['unique']) && $index['unique']) {
-            $command .= ", 'unique' => true";
+            $args[] = "'unique' => true";
         }
 
         if (isset($index['limit']) && $index['limit']) {
-            $command .= ", 'limit' => {$index['limit']}";
+            $args[] = "'limit' => {$index['limit']}";
         }
 
-        return $command . ')';
+        if ($args) {
+            return $columns . ', ' . implode(', ', $args);
+        } else {
+            return $columns;
+        }
     }
 }
