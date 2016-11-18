@@ -552,10 +552,10 @@ class MysqlAdapter extends PdoAdapter implements AdapterInterface
 
             if ($row['Sub_part'] !== null) {
                 $indexes[$row['Key_name']]['limit'] = $row['Sub_part'];
-                $indexes[$row['Key_name']]['limit_col'] = strtolower($row['Column_name']);
+                $indexes[$row['Key_name']]['limit_col'] = $row['Column_name'];
             }
 
-            $indexes[$row['Key_name']]['columns'][] = strtolower($row['Column_name']);
+            $indexes[$row['Key_name']]['columns'][] = $row['Column_name'];
         }
 
         // If index has a limit we need to push the limit column to the end of
