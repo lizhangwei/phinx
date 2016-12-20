@@ -186,7 +186,7 @@ class CodeGenerator
         }
 
         if ($args) {
-            return $columns . ', ' . implode(', ', $args);
+            return $columns . ', array(' . implode(', ', $args).')';
         } else {
             return $columns;
         }
